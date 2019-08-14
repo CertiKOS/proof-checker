@@ -1,0 +1,400 @@
+\documentclass[10pt]{article}
+
+\usepackage{cite,url}
+\usepackage{checker}
+
+\title{An Extensible Proof Checker of the Simply Typed $\lambda$-Calculus}
+\author{Yuting Wang}
+
+
+\begin{document}
+\maketitle
+
+\section{The simply typed $\lambda$-calculus}
+
+The following is the syntax of the simply typed $\lambda$-calculus.
+%
+\begin{tabbing}
+\qquad\=$\tau$\quad\=$:=$\quad\=\kill
+\>$\tau$  \>$:=$  \>$a \sep \tau_1 \to \tau_2$\\
+\>$t$     \>$:=$  \>$c \sep x \sep \tabs{x}{\tau} t \sep t_1\app t_2$
+\end{tabbing}
+%
+where $a$ denotes constant types, $c$ denotes constants and $x$
+denotes variables.
+
+Let $\Sigma := c_1:\tau_1, \ldots, c_n:\tau_n$ denote the signature
+and $\Phi =: x_1:\tau_1,\ldots,x_n:\tau_n$ denote the type context.
+The typing rules derives judgments of the form
+$\typeof{\Sigma}{\Phi}{t}{\tau}$ using the rules in
+Figure~\ref{fig:stlc-typing-rules}:
+
+\begin{figure}[ht!]
+\fbox{$\typeof{\Sigma}{\Phi}{t}{\tau}$}
+\begin{gather*}  
+\infer[\mbox{\typconst}]{
+  \typeof{\Sigma}{\Phi}{c}{\tau}
+}{
+  c:\tau \in \Sigma
+}
+\qquad
+\infer[\mbox{\typvar}]{
+  \typeof{\Sigma}{\Phi}{x}{\tau}
+}{
+  x:\tau \in \Phi
+}
+\\
+\infer[\mbox{\typabs}]{
+  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t}}{\tau_1 \to \tau_2}
+}{
+  x:\_ \not\in\Phi 
+  &
+  \typeof{\Sigma}{\Phi,x:\tau_1}{t}{\tau_2}
+}
+\qquad
+\infer[\mbox{\typapp}]{
+  \typeof{\Sigma}{\Phi}{t_1\app t_2}{\tau_2}
+}{
+  \typeof{\Sigma}{\Phi}{t_1}{\tau_1 \to \tau_2}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+}
+\end{gather*}  
+
+\caption{Typing rules for the simply typed $\lambda$-calculus}
+\label{fig:stlc-typing-rules}
+\end{figure}
+
+
+\section{\STLCE: an extension of the \STLC with explicit conversion rules}
+%
+We extend the \STLC with a proposition that describes the equality of
+terms modulo $\beta$-conversion. To simplify the discussion we assume
+that $\alpha$-conversion is implicitly applied when necessary. For
+this, we introduce a type constant $\prop$ for classifying
+propositions and the proposition $t_1 = t_2$ to denote equality
+between $t_1$ and $t_2$. We also introduce explicit proof terms
+denoted by $\pi$ to characterize the provability of propositions. We
+call this extension \STLCE. The syntax of \STLCE is as follows, where the
+syntax newly introduced w.r.t \STLC is marked red:
+%
+\begin{tabbing}
+\qquad\=$\tau$\quad\=$:=$\quad\=\kill
+\>$\tau$  \>$:=$  \>$\emphred{\prop} \sep a \sep \tau_1 \to \tau_2$\\
+\>$t$     \>$:=$  \>$c \sep x \sep \tabs{x}{\tau} t \sep t_1\app t_2 \sep t_1 = t_2$\\
+\>$\emphred{\pi}$   \>$:=$  \>$\emphred{c_\pi \sep \refl{t} \sep \trans{\pi_1}{\pi_2} \sep \symm{\pi}}$\\
+\>\>\>$\emphred{\sep \congtabs{x}{\tau}{\pi} \sep \congappl{\pi} \sep \congappr{\pi} 
+       \sep \congeql{\pi} \sep \congeqr{\pi}}$\\
+\>\>\>$\emphred{\sep \tbetaconv{x}{\tau}{t_1}{t_2} \sep \conv{\pi_1}{\pi_2}}$
+\end{tabbing}
+%
+The proof terms $\refl{t}$, $\trans{\pi_1}{\pi_2}$ and $\symm{\pi}$
+capture the reflexivity, transitivity and symmetry properties of the
+equality propositions; $\congtabs{x}{\tau}{\pi}$, $\congappl{\pi}$,
+$\congappr{\pi}$, $\congeql{\pi}$ and $\congeqr{\pi}$ capture the
+congruence of equality; $\tbetaconv{x}{\tau}{t_1}{t_2}$ captures
+$\beta$-conversion; and finally, $\conv{\pi_1}{\pi_2}$ denotes the
+explicit conversion between equivalent propositions.
+
+The typing rules of \STLCE are described in Figure~\ref{fig:stlce-typing-rules}.
+Note that we have extended the signature $\Sigma$ with assignments of
+terms to proof-level constants. The rule $\typpconst$ derives the
+types of proof-level constants from these assignments. The rest of the new
+proof rules for typing proof terms are self-explanatory.
+
+\begin{figure}[ht!]
+\fbox{$\typeof{\Sigma}{\Phi}{t}{\tau}$}
+\begin{gather*}  
+\infer[\mbox{\typconst}]{
+  \typeof{\Sigma}{\Phi}{c}{\tau}
+}{
+  c:\tau \in \Sigma
+}
+\qquad
+\infer[\mbox{\typvar}]{
+  \typeof{\Sigma}{\Phi}{x}{\tau}
+}{
+  x:\tau \in \Phi
+}
+\\
+\infer[\mbox{\typabs}]{
+  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t}}{\tau_1 \to \tau_2}
+}{
+  x:\_ \not\in\Phi 
+  &
+  \typeof{\Sigma}{\Phi,x:\tau_1}{t}{\tau_2}
+}
+\qquad
+\infer[\mbox{\typapp}]{
+  \typeof{\Sigma}{\Phi}{t_1\app t_2}{\tau_2}
+}{
+  \typeof{\Sigma}{\Phi}{t_1}{\tau_1 \to \tau_2}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+}
+\\
+\infer[\mbox{\typteq}]{
+  \typeof{\Sigma}{\Phi}{t_1 = t_2}{\prop}
+}{
+  \typeof{\Sigma}{\Phi}{t_1}{\tau}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau}
+}
+\qquad
+\infer[\mbox{\typpconst}]{
+  \typeof{\Sigma}{\Phi}{c_\pi}{t}
+}{
+  c_\pi:t \in \Sigma
+}
+\end{gather*}
+\\
+\fbox{$\typeof{\Sigma}{\Phi}{\pi}{t}$}
+\\
+\begin{gather*}
+\infer[\mbox{\typrefl}]{
+  \typeof{\Sigma}{\Phi}{\refl t}{t = t}
+}{
+  \typeof{\Sigma}{\Phi}{t}{\tau}
+}
+\qquad
+\infer[\mbox{\typtrans}]{
+  \typeof{\Sigma}{\Phi}{\trans{\pi_1}{\pi_2}}{t_1 = t_3}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_1 = t_2}
+  &
+  \typeof{\Sigma}{\Phi}{\pi_2}{t_2 = t_3}
+}
+\\
+\infer[\mbox{\typsymm}]{
+  \typeof{\Sigma}{\Phi}{\symm{\pi}}{t_1 = t_2}
+}{
+  \typeof{\Sigma}{\Phi}{\pi}{t_2 = t_1}
+}
+\qquad
+\infer[\mbox{\typcongabs}]{
+  \typeof{\Sigma}{\Phi}{\congtabs{x}{\tau}{\pi}}{\tabs{x}{\tau}{t_1} = \tabs{x}{\tau}{t_2}}
+}{
+  \typeof{\Sigma}{\Phi,x:\tau}{\pi}{t_1 = t_2}
+}
+\\
+\infer[\mbox{\typcongappl}]{
+  \typeof{\Sigma}{\Phi}{\congappl{\pi}}{t_1\app t_2 = t_1'\app t_2}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_1 = t_1'}
+}
+\qquad
+\infer[\mbox{\typcongappr}]{
+  \typeof{\Sigma}{\Phi}{\congappr{\pi}}{t_1\app t_2 = t_1\app t_2'}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_2 = t_2'}
+}
+\\
+\infer[\mbox{\typcongeql}]{
+  \typeof{\Sigma}{\Phi}{\congeql{\pi}}{(t_1 = t_2) = (t_1' = t_2)}
+}{
+  \typeof{\Sigma}{\Phi}{\pi}{t_1 = t_1'}
+}
+\qquad
+\infer[\mbox{\typcongeqr}]{
+  \typeof{\Sigma}{\Phi}{\congeqr{\pi}}{(t_1 = t_2') = (t_1 = t_2)}
+}{
+  \typeof{\Sigma}{\Phi}{\pi}{t_2 = t_2'}
+}
+\\
+\infer[\mbox{\typbeta}]{
+  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau}{t_1}{t_2}}{(\tabs{x}{\tau}{t_1})\app t_2 = t_2[t_1/x]}
+}{
+  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau}{t_1}}{\tau_1 \to \tau_2}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+}
+\\
+\infer[\mbox{\typconv}]{
+  \typeof{\Sigma}{\Phi}{\conv{\pi_1}{\pi_2}}{t_2}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_1}
+  &
+  \typeof{\Sigma}{\Phi}{\pi_2}{t_1 = t_2}
+}
+\end{gather*}  
+  
+\caption{The typing rules of \STLCE}
+\label{fig:stlce-typing-rules}
+\end{figure}
+
+
+\section{\STLCC: the contextual simply typed $\lambda$-calculus}
+%
+In this section we describe \STLCC, a further extension of \STLCE for
+internalizing the typing derivations of \STLCE as first-class objects
+for the manipulation of open \STLCE terms.
+
+To manipulate open \STLCE terms as data objects, we
+internalize the derivations of \STLCE terms as \emph{contextual terms}
+of the form $\ct{\Phi}{t}$; it denotes a term $t$ that is closed
+w.r.t. and well-typed in the context $\Phi$.
+%
+To capture derivations in their general forms, we allow the context
+$\Phi$ to be parameterized by other contexts. We introduce the
+meta-variable $\phi$ to denote a context parameter and give the new
+syntax of contexts as follows:
+%
+\begin{tabbing}
+\qquad\=$\Phi$\quad\=$:=$\quad\=\kill
+\>$\Phi$  \>$:=$ \>$\bullet \sep \phi \sep \Phi, x:\tau$
+\end{tabbing}
+%
+Note that we allow only the prefix of a context can be parameterized
+by a meta-variable. More general forms of parameterization were
+presented by Stampoulis and Shao\cite{stampoulis12}. For our
+discussion we focus on this simpler form.
+
+We need to talk about conversion of terms between closed contexts,
+which we characterized as \emph{simultaneous substitutions} and use
+$\sigma$ to denote them. Their syntax is given as follows:
+%
+\begin{tabbing}
+\qquad\=$\sigma$\quad\=$:=$\quad\=\kill
+\>$\sigma$  \>$:=$ \>$\bullet \sep \idsub{\phi} \sep \sigma, t$
+\end{tabbing}
+%
+Here $\idsub{\phi}$ denotes an identity substitution for the contexts
+represented by the meta-variable $\phi$.
+
+We extend \STLCE terms with meta-variables for contextual terms. They
+are denoted by $\metavar{X}{\sigma}$ where $\sigma$ is a simultaneous
+substitution to be applied to the contextual term substituted for $X$.
+
+The syntax of \STLCC is described as follows where the newly
+introduced syntax is again marked red:
+%
+\begin{tabbing}
+\qquad\=$\tau$\quad\=$:=$\quad\=\kill
+\>$\tau$  \>$:=$  \>$\prop \sep a \sep \tau_1 \to \tau_2$\\
+\>$t$     \>$:=$  \>$c \sep x \sep \tabs{x}{\tau} t \sep t_1\app t_2 \sep t_1 = t_2 \sep \emphred{X/\sigma}$\\
+\>$\pi$   \>$:=$  \>$c_\pi \sep \refl{t} \sep \trans{\pi_1}{\pi_2} \sep \symm{\pi}$\\
+\>\>\>$\sep \congtabs{x}{\tau}{\pi} \sep \congappl{\pi} \sep \congappr{\pi} \sep \congeql{\pi} \sep \congeqr{\pi}$\\
+\>\>\>$\sep \tbetaconv{x}{\tau}{t_1}{t_2} \sep \conv{\pi_1}{\pi_2}$\\
+\>$\emphred{\Up}$  \>$:=$  \>$\emphred{\ct{\Phi}{\tau}}$\\
+\>$\emphred{T}$     \>$:=$  \>$\emphred{\ct{\Phi}{t}}$\\
+\>$\emphred{\Pi}$   \>$:=$  \>$\emphred{\ct{\Phi}{\pi}}$
+\end{tabbing}
+%
+Here $\Up$, $T$ and $\Pi$ denote contextual types, terms and proof terms, respectively.
+
+To describe typing of terms containing meta-variables, we introduce
+contexts for these variables. A meta-variable context $\Phi$ as the
+following syntax:
+%
+\begin{tabbing}
+\qquad\=$\Psi$\quad\=$:=$\quad\=\kill
+\>$\Psi$  \>$:=$ \>$\bullet \sep \Psi, X:\Up$
+\end{tabbing}
+
+The typing rules for \STLCC are then given in
+Figure~\ref{fig:stlcc-typing-rules}.
+%
+The rules for deriving $\ctypeof{\Sigma}{\Psi}{\Phi}{t}{\tau}$ and
+$\ctypeof{\Sigma}{\Psi}{\Phi}{\pi}{t}$ are mostly adapted from those
+in Figure~\ref{fig:stlce-typing-rules} by adding the meta-context
+$\Psi$; we omit these adapted rules. The only new rule \typmetavar is
+for typing meta-variables.
+
+%
+\begin{figure}[ht!]
+\fbox{$\ctypeof{\Sigma}{\Psi}{\Phi}{\sigma}{\Phi'}$}
+\\
+\begin{gather*}
+\infer[]{
+  \ctypeof{\Sigma}{\Psi}{\Phi}{\bullet}{\bullet}
+}{
+}
+\qquad
+\infer[]{
+  \ctypeof{\Sigma}{\Psi}{\Phi}{\idsub{\phi}}{\phi}
+}{
+  \phi \in \Phi
+}
+\qquad
+\infer[]{
+  \ctypeof{\Sigma}{\Psi}{\Phi}{\sigma,t}{\Phi',x:\tau}
+}{
+  \ctypeof{\Sigma}{\Psi}{\Phi}{t}{\tau}
+  &
+  \ctypeof{\Sigma}{\Psi}{\Phi}{\sigma}{\Phi'}
+}
+\end{gather*}
+\\
+\fbox{$\ctypeof{\Sigma}{\Psi}{\Phi}{t}{\tau}$} 
+\\
+\begin{gather*}
+  \ldots \mbox{(adapted from Figure~\ref{fig:stlce-typing-rules} by adding $\Psi$)}
+  \\
+  \\
+  \infer[\mbox{\typmetavar}]{
+    \ctypeof{\Sigma}{\Psi}{\Phi}{\metavar{X}{\sigma}}{\tau}
+  }{
+    X:\ct{\Phi'}{\tau} \in \Psi
+    & 
+    \ctypeof{\Sigma}{\Psi}{\Phi}{\sigma}{\Phi'}
+  }
+\end{gather*}
+\\
+\fbox{$\ctypeof{\Sigma}{\Psi}{\Phi}{\pi}{t}$} 
+\\
+\begin{gather*}
+  \ldots \mbox{(adapted from Figure~\ref{fig:stlce-typing-rules} by adding $\Psi$)}
+\end{gather*}
+\\
+\fbox{$\ctypeof{\Sigma}{\Psi}{\Phi}{T}{\Up}$}
+\begin{gather*}
+  \infer[\mbox{\typctxterm}]{
+    \cmtypeof{\Sigma}{\Psi}{\ct{\Phi}{t}}{\ct{\Phi}{\tau}}
+  }{
+    \ctypeof{\Sigma}{\Psi}{\Phi}{t}{\tau}
+  }
+\end{gather*}
+\\
+\fbox{$\ctypeof{\Sigma}{\Psi}{\Phi}{\Pi}{T}$}
+\begin{gather*}
+  \infer[\mbox{\typctxpfterm}]{
+    \cmtypeof{\Sigma}{\Psi}{\ct{\Phi}{\pi}}{\ct{\Phi}{t}}
+  }{
+    \ctypeof{\Sigma}{\Psi}{\Phi}{\pi}{t}
+  }
+\end{gather*}
+
+\caption{The typing rules of \STLCC}
+\label{fig:stlcc-typing-rules}
+\end{figure}
+
+
+\section{Algorithmic equality of \STLCC}
+
+In this section, we define alternative typing rules of \STLCC that
+check equality of terms algorithmically and that do not generate proof
+terms. We prove that the two type system are equivalent in the next
+section.
+
+There are two choices:
+
+\begin{itemize}
+\item We can follow the normalization \& comparison approach;
+\item We can follow the type directed checking approach in the literature.
+\end{itemize}
+
+\section{Equivalence of declarative and algorithmic equality of \STLCC}
+
+Depending on the choice of algorithmic equality,
+%
+\begin{itemize}
+\item we prove normalization and confluence of the evaluation in
+  \STLCC, from which we derive the equivalence; or
+\item we define a kripke logical relation and prove it implies algorithmic
+  equality and it is implied by declarative equality.
+\end{itemize}
+
+%% Bibliography
+\bibliography{refs} \bibliographystyle{abbrv}
+
+\end{document}

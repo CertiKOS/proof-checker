@@ -1,0 +1,75 @@
+\usepackage{fullpage}
+\usepackage{times}
+\usepackage{xspace}
+\usepackage{proof,amsmath,amssymb}
+\usepackage{xcolor}
+
+\newcommand{\emphred}[1]{\textcolor{red}{#1}}
+\def\imply{\supset}
+\def\sep{\; | \;}
+
+
+\def\STLC{STLC\xspace}
+\def\STLCE{STLC-e\xspace}
+\def\STLCC{STLC-c\xspace}
+\def\Up{\Upsilon}
+
+
+% Terms
+\def\prop{\mathbb{P}}
+\def\app{\;}
+\newcommand{\abs}[2]{\lambda{#1}.{#2}}
+\newcommand{\tabs}[3]{\lambda{#1}:{#2}.{#3}}
+\newcommand{\refl}[1]{\mbox{\bf refl}\app#1}
+\newcommand{\trans}[2]{\mbox{\bf trans}\app#1\app #2}
+\newcommand{\symm}[1]{\mbox{\bf symm}\app #1}
+\newcommand{\congtabs}[3]{\mbox{\bf congAbs}\app(#1:#2.#3)}
+\newcommand{\congabs}[2]{\mbox{\bf congAbs}\app(#1.#2)}
+\newcommand{\congappl}[1]{\mbox{\bf congAppL}\app#1}
+\newcommand{\congappr}[1]{\mbox{\bf congAppR}\app#1}
+\newcommand{\congeql}[1]{\mbox{\bf congEqL}\app#1}
+\newcommand{\congeqr}[1]{\mbox{\bf congEqR}\app#1}
+\newcommand{\betaconv}[3]{\mbox{\bf beta}\app(#1.#2)\app #3}
+\newcommand{\tbetaconv}[4]{\mbox{\bf beta}\app(#1:#2.#3)\app #4}
+\newcommand{\conv}[2]{\mbox{\bf conv}\app #1\app #2}
+\newcommand{\metavar}[2]{#1 / #2}
+\newcommand{\ct}[2]{[{#1}]{#2}}
+\newcommand{\cc}[1]{[{#1}]{\bf ctx}}
+\newcommand{\idsub}[1]{{\bf id}_{#1}}
+
+
+% Typing judgments and rules
+\newcommand{\typeof}[4]{#2 \vdash_{#1} #3: #4}
+\newcommand{\ctypeof}[5]{#2; #3 \vdash_{#1} #4: #5}
+\newcommand{\cmtypeof}[4]{#2 \vdash_{#1} #3: #4}
+
+\def\typvar{t-var\xspace}
+\def\typconst{t-const\xspace}
+\def\typabs{t-abs\xspace}
+\def\typapp{t-app\xspace}
+\def\typteq{t-teq\xspace}
+\def\typpconst{t-pconst\xspace}
+\def\typrefl{t-refl\xspace}
+\def\typtrans{t-trans\xspace}
+\def\typsymm{t-symm\xspace}
+\def\typcongabs{t-congAbs\xspace}
+\def\typcongappl{t-congAppL\xspace}
+\def\typcongappr{t-congAppR\xspace}
+\def\typcongeql{t-congEqL\xspace}
+\def\typcongeqr{t-congEqR\xspace}
+\def\typbeta{t-beta\xspace}
+\def\typconv{t-conv\xspace}
+\def\typmetavar{t-metavar\xspace}
+\def\typctxterm{t-ctxterm\xspace}
+\def\typctxpfterm{t-ctxpfterm\xspace}
+
+
+%% Proof terms
+\newcommand{\pair}[2]{(#1,#2)}
+\newcommand{\fst}[1]{\mbox{\bf fst}(#1)}
+\newcommand{\snd}[1]{\mbox{\bf snd}(#1)}
+\newcommand{\inl}[1]{\mbox{\bf inl}(#1)}
+\newcommand{\inr}[1]{\mbox{\bf inr}(#1)}
+\newcommand{\case}[5]
+           {\mbox{{\bf case} $(#1)$ {\bf of inl} {$#2$} $\Rightarrow$ {$#3$} $|$ {\bf inr} {$#4$} $\Rightarrow$ {$#5$}}}
+
