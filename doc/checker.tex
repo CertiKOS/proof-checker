@@ -202,9 +202,9 @@ proof rules for typing proof terms are self-explanatory.
 }
 \\
 \infer[\mbox{\typbeta}]{
-  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau}{t_1}{t_2}}{(\tabs{x}{\tau}{t_1})\app t_2 = t_2[t_1/x]}
+  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau_1}{t_1}{t_2}}{(\tabs{x}{\tau_1}{t_1})\app t_2 = t_2[t_1/x]}
 }{
-  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau}{t_1}}{\tau_1 \to \tau_2}
+  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t_1}}{\tau_1 \to \tau_2}
   &
   \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
 }
