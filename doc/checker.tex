@@ -140,17 +140,17 @@ proof rules for typing proof terms are self-explanatory.
   &
   \typeof{\Sigma}{\Phi}{t_2}{\tau}
 }
-\qquad
-\infer[\mbox{\typpconst}]{
-  \typeof{\Sigma}{\Phi}{c_\pi}{t}
-}{
-  c_\pi:t \in \Sigma
-}
 \end{gather*}
 \\
 \fbox{$\typeof{\Sigma}{\Phi}{\pi}{t}$}
 \\
 \begin{gather*}
+\infer[\mbox{\typpconst}]{
+  \typeof{\Sigma}{\Phi}{c_\pi}{t}
+}{
+  c_\pi:t \in \Sigma
+}
+\qquad
 \infer[\mbox{\typrefl}]{
   \typeof{\Sigma}{\Phi}{\refl t}{t = t}
 }{
