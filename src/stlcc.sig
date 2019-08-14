@@ -67,7 +67,11 @@ type cpftm      ctx -> bindmany tm pftm -> cpftm.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Predicate Symbols for Typing %%%%%%%%%%%%%%%%%%%%
 
 type of         tm -> ty -> o.       % Type of terms
+type oflist     list tm -> list ty -> o.
 type pof        pftm -> tm -> o.     % Type of proof terms
 type mvof       mvar -> cty -> o.    % Type of meta variables
+type cvof       cvar -> o.           % Existence of context variables
 type subof      sub -> ctx -> o.     % Type of substitutions
+type subhdof    subhd -> ctxhd -> o. 
+
 
