@@ -8,3 +8,5 @@
 *.bbl
 *.bcf
 *.blg
+*.lp
+*.lpo
