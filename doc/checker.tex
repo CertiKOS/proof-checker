@@ -81,7 +81,7 @@ syntax newly introduced w.r.t \STLC is marked red:
 \begin{tabbing}
 \qquad\=$\tau$\quad\=$:=$\quad\=\kill
 \>$\tau$  \>$:=$  \>$\emphred{\prop} \sep a \sep \tau_1 \to \tau_2$\\
-\>$t$     \>$:=$  \>$c \sep x \sep \tabs{x}{\tau} t \sep t_1\app t_2 \sep t_1 = t_2$\\
+\>$t$     \>$:=$  \>$c \sep x \sep \tabs{x}{\tau} t \sep t_1\app t_2 \sep \emphred{t_1 = t_2}$\\
 \>$\emphred{\pi}$   \>$:=$  \>$\emphred{c_\pi \sep \refl{t} \sep \trans{\pi_1}{\pi_2} \sep \symm{\pi}}$\\
 \>\>\>$\emphred{\sep \congtabs{x}{\tau}{\pi} \sep \congappl{\pi} \sep \congappr{\pi} 
        \sep \congeql{\pi} \sep \congeqr{\pi}}$\\
@@ -368,6 +368,18 @@ for typing meta-variables.
 \label{fig:stlcc-typing-rules}
 \end{figure}
 
+
+\section{Type Checking Algorithm for \STLCC}
+
+The type checking algorithm needs to be 
+
+\begin{itemize}
+\item Terminating
+\item Sound
+\item Complete
+\end{itemize}
+
+The key is to implement inequality checks between syntactic objects.
 
 \section{Algorithmic equality of \STLCC}
 
