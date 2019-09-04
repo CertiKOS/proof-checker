@@ -1,8 +1,10 @@
 \usepackage{fullpage}
 \usepackage{times}
 \usepackage{xspace}
-\usepackage{proof,amsmath,amssymb}
+\usepackage{proof,amsmath,amssymb,amsthm}
 \usepackage{xcolor}
+
+\newtheorem{mydef}{Definition}[section]
 
 \newcommand{\emphred}[1]{\textcolor{red}{#1}}
 \def\imply{\supset}
@@ -12,6 +14,7 @@
 \def\STLC{STLC\xspace}
 \def\STLCE{STLC-e\xspace}
 \def\STLCC{STLC-c\xspace}
+\def\STLCD{STLC-d\xspace}
 \def\Up{\Upsilon}
 
 
@@ -36,6 +39,11 @@
 \newcommand{\ct}[2]{[{#1}]{#2}}
 \newcommand{\cc}[1]{[{#1}]{\bf ctx}}
 \newcommand{\idsub}[1]{{\bf id}_{#1}}
+
+\newcommand{\dtabs}[2]{\lambda{(#1)}.{#2}}
+\newcommand{\dcongtabs}[2]{\mbox{\bf congAbs}\app(#1.#2)}
+\newcommand{\dtbetaconv}[3]{\mbox{\bf beta}\app(#1.#2)\app #3}
+
 
 
 % Typing judgments and rules
@@ -73,3 +81,12 @@
 \newcommand{\case}[5]
            {\mbox{{\bf case} $(#1)$ {\bf of inl} {$#2$} $\Rightarrow$ {$#3$} $|$ {\bf inr} {$#4$} $\Rightarrow$ {$#5$}}}
 
+
+%% Hybrid de-bruijn representation
+\newcommand{\vbnd}[3]{#2 <^{#1} #3}
+\newcommand{\fvbnd}[2]{\vbnd{f}{#1}{#2}}
+\newcommand{\bvbnd}[2]{\vbnd{b}{#1}{#2}}
+\newcommand{\freshening}[3]{\lceil#1\rceil^{#2}_{#3}}
+\newcommand{\binding}[3]{\lfloor#1\rfloor^{#2}_{#3}}
+\newcommand{\fresheningz}[2]{\lceil#1\rceil_{#2}}
+\newcommand{\bindingz}[2]{\lfloor#1\rfloor_{#2}}

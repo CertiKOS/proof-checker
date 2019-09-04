@@ -223,6 +223,321 @@ proof rules for typing proof terms are self-explanatory.
 \end{figure}
 
 
+\section{\STLCD: Formulation of \STLCE using the hybrid de-bruijn representation}
+
+To give a more concrete representation of binders and variables, we
+use the hybrid de-bruijn representation described in
+\cite{stampoulis12}. 
+
+\begin{mydef}[Syntax]\label{def:stlcd-syntax}
+The syntax of \STLCD is as follows:
+%
+\begin{tabbing}
+\qquad\=$\tau$\quad\=$:=$\quad\=\kill
+\>$\tau$  \>$:=$  \>$\prop \sep a \sep \tau_1 \to \tau_2$\\
+\>$t$     \>$:=$  \>$c \sep v_i \sep b_i \sep \dtabs{\tau}{t} \sep t_1\app t_2 \sep t_1 = t_2$\\
+\>$\pi$   \>$:=$  \>$c_\pi \sep \refl{t} \sep \trans{\pi_1}{\pi_2} \sep \symm{\pi}$\\
+\>\>\>$\sep \dcongtabs{\tau}{\pi} \sep \congappl{\pi} \sep \congappr{\pi} 
+       \sep \congeql{\pi} \sep \congeqr{\pi}$\\
+\>\>\>$\sep \dtbetaconv{\tau}{t_1}{t_2} \sep \conv{\pi_1}{\pi_2}$
+\end{tabbing}
+%
+where $f_i$ represents the $i$-th free variable in the enclosing
+context and $b_i$ represents the de-bruijn index $i$ of a bound
+variable.
+\end{mydef}
+
+\begin{mydef}[Variable Limits]\label{def:stlcd-var-limits}
+The limits of free variables for terms and proof terms are defined as follows:\\
+
+\fbox{$\fvbnd{t}{n}$}
+\begin{align*}
+  \fvbnd{c}{n}\\
+  \fvbnd{v_i}{n}              & \qquad \Longleftarrow \qquad i < n\\
+  \fvbnd{b_i}{n}\\
+  \fvbnd{\dtabs{\tau}{t}}{n}  & \qquad \Longleftarrow \qquad \fvbnd{t}{n}\\
+  \fvbnd{t_1\app t_2}{n}      & \qquad \Longleftarrow \qquad \fvbnd{t_1}{n} \land \fvbnd{t_2}{n}\\
+  \fvbnd{t_1 = t_2}{n}        & \qquad \Longleftarrow \qquad \fvbnd{t_1}{n} \land \fvbnd{t_2}{n}
+\end{align*}
+\\
+\fbox{$\fvbnd{\pi}{n}$}
+\begin{align*}
+  \fvbnd{c_\pi}{n}\\
+  \fvbnd{\refl{t}}{n}              & \qquad \Longleftarrow \qquad \fvbnd{t}{n}\\ 
+  \fvbnd{\trans{\pi_1}{\pi_2}}{n}  & \qquad \Longleftarrow \qquad \fvbnd{\pi_1}{n} \land \fvbnd{\pi_2}{n}\\
+  \fvbnd{\symm{\pi}}{n}            & \qquad \Longleftarrow \qquad \fvbnd{\pi}{n}\\
+  \fvbnd{\dcongtabs{\tau}{\pi}}{n} & \qquad \Longleftarrow \qquad \fvbnd{\pi}{n}\\
+  \fvbnd{\congappl{\pi}}{n}        & \qquad \Longleftarrow \qquad \fvbnd{\pi}{n}\\
+  \fvbnd{\congappr{\pi}}{n}        & \qquad \Longleftarrow \qquad \fvbnd{\pi}{n}\\
+  \fvbnd{\congeql{\pi}}{n}         & \qquad \Longleftarrow \qquad \fvbnd{\pi}{n}\\
+  \fvbnd{\congeqr{\pi}}{n}         & \qquad \Longleftarrow \qquad \fvbnd{\pi}{n}\\
+  \fvbnd{\dtbetaconv{\tau}{t_1}{t_2}}{n}  & \qquad \Longleftarrow \qquad 
+     \fvbnd{t_1}{n} \land  \fvbnd{t_2}{n}\\
+  \fvbnd{\conv{\pi_1}{\pi_2}}{n}   & \qquad \Longleftarrow \qquad \fvbnd{\pi_1}{n} \land  \fvbnd{\pi_2}{n}
+\end{align*}
+
+The limits of bound variables for terms and proof terms are defined as follows:\\
+
+\fbox{$\bvbnd{t}{n}$}
+\begin{align*}
+  \bvbnd{c}{n}\\
+  \bvbnd{v_i}{n}\\
+  \bvbnd{b_i}{n}              & \qquad \Longleftarrow \qquad i < n\\
+  \bvbnd{\dtabs{\tau}{t}}{n}  & \qquad \Longleftarrow \qquad \bvbnd{t}{n+1}\\
+  \bvbnd{t_1\app t_2}{n}      & \qquad \Longleftarrow \qquad \bvbnd{t_1}{n} \land \bvbnd{t_2}{n}\\
+  \bvbnd{t_1 = t_2}{n}        & \qquad \Longleftarrow \qquad \bvbnd{t_1}{n} \land \bvbnd{t_2}{n}
+\end{align*}
+\\
+\fbox{$\bvbnd{\pi}{n}$}
+\begin{align*}
+  \bvbnd{c_\pi}{n}\\
+  \bvbnd{\refl{t}}{n}              & \qquad \Longleftarrow \qquad \bvbnd{t}{n}\\ 
+  \bvbnd{\trans{\pi_1}{\pi_2}}{n}  & \qquad \Longleftarrow \qquad \bvbnd{\pi_1}{n} \land \bvbnd{\pi_2}{n}\\
+  \bvbnd{\symm{\pi}}{n}            & \qquad \Longleftarrow \qquad \bvbnd{\pi}{n}\\
+  \bvbnd{\dcongtabs{\tau}{\pi}}{n} & \qquad \Longleftarrow \qquad \bvbnd{\pi}{n+1}\\
+  \bvbnd{\congappl{\pi}}{n}        & \qquad \Longleftarrow \qquad \bvbnd{\pi}{n}\\
+  \bvbnd{\congappr{\pi}}{n}        & \qquad \Longleftarrow \qquad \bvbnd{\pi}{n}\\
+  \bvbnd{\congeql{\pi}}{n}         & \qquad \Longleftarrow \qquad \bvbnd{\pi}{n}\\
+  \bvbnd{\congeqr{\pi}}{n}         & \qquad \Longleftarrow \qquad \bvbnd{\pi}{n}\\
+  \bvbnd{\dtbetaconv{\tau}{t_1}{t_2}}{n}  & \qquad \Longleftarrow \qquad 
+     \bvbnd{t_1}{n+1} \land  \bvbnd{t_2}{n}\\
+  \bvbnd{\conv{\pi_1}{\pi_2}}{n}   & \qquad \Longleftarrow \qquad \bvbnd{\pi_1}{n} \land  \bvbnd{\pi_2}{n}
+\end{align*}
+
+\end{mydef}
+
+
+
+\begin{mydef}[Freshening]\label{def:stlcd-freshening}
+Freshening turns the occurrences of the top most bound variable in a
+term into a free variable. It is defined for both terms and proof
+terms. We write $\freshening{t}{n}{m}$ ($\freshening{\pi}{n}{m}$) for
+turning the variable $b_n$ in term $t$ (proof term $\pi$) into $f_m$;
+here we assume $\bvbnd{t}{n+1}$ ($\bvbnd{\pi}{n+1}$). We write
+$\fresheningz{t}{m}$ ($\fresheningz{\pi}{m}$) to denote $\freshening{t}{0}{m}$
+($\freshening{\pi}{0}{m}$).
+%
+\\
+
+\fbox{$\freshening{t}{n}{m}$}
+\begin{align*}
+  \freshening{c}{n}{m}   & \qquad = \qquad c\\
+  \freshening{v_i}{n}{m} & \qquad = \qquad v_i\\
+  \freshening{b_n}{n}{m} & \qquad = \qquad f_m\\
+  \freshening{b_i}{n}{m} & \qquad = \qquad b_i  \qquad (i < n)\\
+  \freshening{\dtabs{\tau}{t}}{n}{m} & \qquad = \qquad 
+    \dtabs{\tau}{\freshening{t}{n+1}{m}}\\
+  \freshening{t_1\app t_2}{n}{m} & \qquad = \qquad
+    \freshening{t_1}{n}{m} \land \freshening{t_1}{n}{m}\\
+  \freshening{t_1 = t_2}{n}{m} & \qquad = \qquad
+    \freshening{t_1}{n}{m} \land \freshening{t_1}{n}{m}
+\end{align*}
+
+
+\fbox{$\freshening{\pi}{n}{m}$}
+\begin{align*}
+  \freshening{c_\pi}{n}{m}     & \qquad = \qquad c_\pi\\
+  \freshening{\refl{t}}{n}{m} & \qquad = \qquad \refl{\freshening{t}{n}{m}}\\
+  \freshening{\trans{\pi_1}{\pi_2}}{n}{m} & \qquad = \qquad 
+    \trans{\freshening{\pi_1}{n}{m}}{\freshening{\pi_2}{n}{m}}\\
+  \freshening{\symm{\pi}}{n}{m} & \qquad = \qquad 
+    \symm{\freshening{\pi}{n}{m}}\\
+  \freshening{\dcongtabs{\tau}{\pi}}{n}{m} & \qquad = \qquad 
+    \dcongtabs{\tau}{\freshening{\pi}{n+1}{m}}\\
+  \freshening{\congappl{\pi}}{n}{m} & \qquad = \qquad 
+    \congappl{\freshening{\pi}{n}{m}}\\
+  \freshening{\congappr{\pi}}{n}{m} & \qquad = \qquad 
+    \congappr{\freshening{\pi}{n}{m}}\\
+  \freshening{\congeql{\pi}}{n}{m} & \qquad = \qquad 
+    \congeql{\freshening{\pi}{n}{m}}\\
+  \freshening{\congeqr{\pi}}{n}{m} & \qquad = \qquad 
+    \congeqr{\freshening{\pi}{n}{m}}\\
+  \freshening{\dtbetaconv{\tau}{t_1}{t_2}}{n}{m} & \qquad = \qquad 
+    \dtbetaconv{\tau}{\freshening{t_1}{n+1}{m}}{\freshening{t_2}{n}{m}}\\
+  \freshening{\conv{\pi_1}{\pi_2}}{n}{m} & \qquad = \qquad
+    \conv{\freshening{\pi_1}{n}{m}}{\freshening{\pi_2}{n}{m}}
+\end{align*}
+\end{mydef}
+
+
+\begin{mydef}[Binding]\label{def:stlcd-binding}
+Binding turns the occurrences of the top most free variables in a term
+into a bound variable. It is defined for both terms and proof
+terms. We write $\binding{t}{n}{m}$ ($\binding{\pi}{n}{m}$) for
+turning the variable $f_m$ in term $t$ (proof term $\pi$) into $b_n$;
+here we assume $\fvbnd{t}{n+1}$ ($\fvbnd{\pi}{n+1}$). We write
+$\bindingz{t}{m}$ ($\bindingz{\pi}{m}$) to denote $\binding{t}{0}{m}$
+($\binding{\pi}{0}{m}$).
+
+\fbox{$\binding{t}{n}{m}$}
+\begin{align*}
+  \binding{c}{n}{m}   & \qquad = \qquad c\\
+  \binding{v_m}{n}{m} & \qquad = \qquad b_n\\
+  \binding{v_i}{n}{m} & \qquad = \qquad v_i  \qquad (i < m)\\
+  \binding{b_i}{n}{m} & \qquad = \qquad b_i\\
+  \binding{\dtabs{\tau}{t}}{n}{m} & \qquad = \qquad 
+    \dtabs{\tau}{\binding{t}{n+1}{m}}\\
+  \binding{t_1\app t_2}{n}{m} & \qquad = \qquad
+    \binding{t_1}{n}{m} \land \binding{t_1}{n}{m}\\
+  \binding{t_1 = t_2}{n}{m} & \qquad = \qquad
+    \binding{t_1}{n}{m} \land \binding{t_1}{n}{m}
+\end{align*}
+
+
+\fbox{$\binding{\pi}{n}{m}$}
+\begin{align*}
+  \binding{c_\pi}{n}{m}     & \qquad = \qquad c_\pi\\
+  \binding{\refl{t}}{n}{m} & \qquad = \qquad \refl{\binding{t}{n}{m}}\\
+  \binding{\trans{\pi_1}{\pi_2}}{n}{m} & \qquad = \qquad 
+    \trans{\binding{\pi_1}{n}{m}}{\binding{\pi_2}{n}{m}}\\
+  \binding{\symm{\pi}}{n}{m} & \qquad = \qquad 
+    \symm{\binding{\pi}{n}{m}}\\
+  \binding{\dcongtabs{\tau}{\pi}}{n}{m} & \qquad = \qquad 
+    \dcongtabs{\tau}{\binding{\pi}{n+1}{m}}\\
+  \binding{\congappl{\pi}}{n}{m} & \qquad = \qquad 
+    \congappl{\binding{\pi}{n}{m}}\\
+  \binding{\congappr{\pi}}{n}{m} & \qquad = \qquad 
+    \congappr{\binding{\pi}{n}{m}}\\
+  \binding{\congeql{\pi}}{n}{m} & \qquad = \qquad 
+    \congeql{\binding{\pi}{n}{m}}\\
+  \binding{\congeqr{\pi}}{n}{m} & \qquad = \qquad 
+    \congeqr{\binding{\pi}{n}{m}}\\
+  \binding{\dtbetaconv{\tau}{t_1}{t_2}}{n}{m} & \qquad = \qquad 
+    \dtbetaconv{\tau}{\binding{t_1}{n+1}{m}}{\binding{t_2}{n}{m}}\\
+  \binding{\conv{\pi_1}{\pi_2}}{n}{m} & \qquad = \qquad
+    \conv{\binding{\pi_1}{n}{m}}{\binding{\pi_2}{n}{m}}
+\end{align*}
+  
+\end{mydef}
+
+
+\begin{mydef}[Typing]\label{def:stlcd-typing-rules}
+  The typing rules are shown in Figure~\ref{fig:stlcd-typing-rules}.
+\end{mydef}
+
+
+\begin{figure}[ht!]
+\fbox{$\typeof{\Sigma}{\Phi}{t}{\tau}$}
+\begin{gather*}  
+\infer[\mbox{\typconst}]{
+  \typeof{\Sigma}{\Phi}{c}{\tau}
+}{
+  c:\tau \in \Sigma
+}
+\qquad
+\infer[\mbox{\typvar}]{
+  \typeof{\Sigma}{\Phi}{x}{\tau}
+}{
+  x:\tau \in \Phi
+}
+\\
+\infer[\mbox{\typabs}]{
+  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t}}{\tau_1 \to \tau_2}
+}{
+  x:\_ \not\in\Phi 
+  &
+  \typeof{\Sigma}{\Phi,x:\tau_1}{t}{\tau_2}
+}
+\qquad
+\infer[\mbox{\typapp}]{
+  \typeof{\Sigma}{\Phi}{t_1\app t_2}{\tau_2}
+}{
+  \typeof{\Sigma}{\Phi}{t_1}{\tau_1 \to \tau_2}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+}
+\\
+\infer[\mbox{\typteq}]{
+  \typeof{\Sigma}{\Phi}{t_1 = t_2}{\prop}
+}{
+  \typeof{\Sigma}{\Phi}{t_1}{\tau}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau}
+}
+\end{gather*}
+\\
+\fbox{$\typeof{\Sigma}{\Phi}{\pi}{t}$}
+\\
+\begin{gather*}
+\infer[\mbox{\typpconst}]{
+  \typeof{\Sigma}{\Phi}{c_\pi}{t}
+}{
+  c_\pi:t \in \Sigma
+}
+\qquad
+\infer[\mbox{\typrefl}]{
+  \typeof{\Sigma}{\Phi}{\refl t}{t = t}
+}{
+  \typeof{\Sigma}{\Phi}{t}{\tau}
+}
+\qquad
+\infer[\mbox{\typtrans}]{
+  \typeof{\Sigma}{\Phi}{\trans{\pi_1}{\pi_2}}{t_1 = t_3}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_1 = t_2}
+  &
+  \typeof{\Sigma}{\Phi}{\pi_2}{t_2 = t_3}
+}
+\\
+\infer[\mbox{\typsymm}]{
+  \typeof{\Sigma}{\Phi}{\symm{\pi}}{t_1 = t_2}
+}{
+  \typeof{\Sigma}{\Phi}{\pi}{t_2 = t_1}
+}
+\qquad
+\infer[\mbox{\typcongabs}]{
+  \typeof{\Sigma}{\Phi}{\congtabs{x}{\tau}{\pi}}{\tabs{x}{\tau}{t_1} = \tabs{x}{\tau}{t_2}}
+}{
+  \typeof{\Sigma}{\Phi,x:\tau}{\pi}{t_1 = t_2}
+}
+\\
+\infer[\mbox{\typcongappl}]{
+  \typeof{\Sigma}{\Phi}{\congappl{\pi}}{t_1\app t_2 = t_1'\app t_2}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_1 = t_1'}
+}
+\qquad
+\infer[\mbox{\typcongappr}]{
+  \typeof{\Sigma}{\Phi}{\congappr{\pi}}{t_1\app t_2 = t_1\app t_2'}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_2 = t_2'}
+}
+\\
+\infer[\mbox{\typcongeql}]{
+  \typeof{\Sigma}{\Phi}{\congeql{\pi}}{(t_1 = t_2) = (t_1' = t_2)}
+}{
+  \typeof{\Sigma}{\Phi}{\pi}{t_1 = t_1'}
+}
+\qquad
+\infer[\mbox{\typcongeqr}]{
+  \typeof{\Sigma}{\Phi}{\congeqr{\pi}}{(t_1 = t_2') = (t_1 = t_2)}
+}{
+  \typeof{\Sigma}{\Phi}{\pi}{t_2 = t_2'}
+}
+\\
+\infer[\mbox{\typbeta}]{
+  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau_1}{t_1}{t_2}}{(\tabs{x}{\tau_1}{t_1})\app t_2 = t_2[t_1/x]}
+}{
+  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t_1}}{\tau_1 \to \tau_2}
+  &
+  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+}
+\\
+\infer[\mbox{\typconv}]{
+  \typeof{\Sigma}{\Phi}{\conv{\pi_1}{\pi_2}}{t_2}
+}{
+  \typeof{\Sigma}{\Phi}{\pi_1}{t_1}
+  &
+  \typeof{\Sigma}{\Phi}{\pi_2}{t_1 = t_2}
+}
+\end{gather*}  
+  
+\caption{The typing rules of \STLCD}
+\label{fig:stlcd-typing-rules}
+\end{figure}
+
+
+
 \section{\STLCC: the contextual simply typed $\lambda$-calculus}
 %
 In this section we describe \STLCC, a further extension of \STLCE for
@@ -395,6 +710,7 @@ There are two choices:
 \item We can follow the type directed checking approach in the
   literature~\cite{harper05,cave18}\cite[Chapter~6]{pierce04}.
 \end{itemize}
+
 
 \section{Equivalence of declarative and algorithmic equality of \STLCC}
 
