@@ -14,4 +14,4 @@ Definition bind (A B: Type) (e: option A) (f: A -> option B) : option B :=
   end.
 
 Notation "'do' x <- e1 ; e2" := (bind e1 (fun x => e2))
-(right associativity, at level 200): option_monad_scope.
+(right associativity, x ident, at level 200): option_monad_scope.

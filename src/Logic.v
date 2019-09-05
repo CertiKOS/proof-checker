@@ -42,7 +42,6 @@ Inductive term: Type :=
 | teq   : term -> term -> term.
 
 Notation "t1 == t2" := (teq t1 t2) (at level 60) : stlcd_scope.
-
 Local Open Scope stlcd_scope.
 
 (** Proof terms *)
@@ -262,11 +261,12 @@ Definition index_ctx (ctx:tyctx) (i:nat) : option ty :=
 (** ** Typing rules *)
 
 (** Signatures *)
-Definition sign := const -> ty.
+Definition sign := const -> option ty.
+Definition empty_sign: sign := fun _ => None.
 
 (** Typing rules for terms *)
 Inductive tm_of: sign -> tyctx -> term -> ty -> Prop :=
-| tm_of_cst : forall sgn ctx c ty, sgn c = ty -> tm_of sgn ctx (cst c) ty
+| tm_of_cst : forall sgn ctx c ty, sgn c = Some ty -> tm_of sgn ctx (cst c) ty
 | tm_of_fvar : forall sgn ctx i ty,
     index_ctx ctx i = Some ty ->
     tm_of sgn ctx (fvar i) ty
@@ -282,6 +282,9 @@ Inductive tm_of: sign -> tyctx -> term -> ty -> Prop :=
     tm_of sgn ctx t1 ty -> 
     tm_of sgn ctx t2 ty -> 
     tm_of sgn ctx (t1 == t2) prop.
+
+Notation "S ; C |- t : ty" := (tm_of S C t ty)
+  (at level 70, C at level 200, t at level 100, ty at level 200): stlcd_scope.
 
 
 (** Typing rules for proof terms *)
@@ -325,4 +328,64 @@ Inductive ptm_of: sign -> tyctx -> pterm -> term -> Prop :=
     ptm_of sgn ctx pt2 (t1 == t2) ->
     ptm_of sgn ctx (conv pt1 pt2) t2.
 
+Notation "S; C ||- pt : t" := (ptm_of S C pt t)
+  (at level 70): stlcd_scope.
+
+Local Open Scope stlcd_scope.
+
+
+(** ** Examples *)
+Definition a := bty.
+(** x: a -> a |- fun y:a => x y : arr a a *)
+Example of_tm_ex1: tm_of empty_sign [arr a a] (abs a (app (fvar 0) (bvar 0))) (arr a a).
+Proof.
+  econstructor. reflexivity.
+  cbn.
+  econstructor. 
+  constructor. cbn. reflexivity.
+  constructor. cbn. auto.
+Qed.
+
+Example of_tm_ex2: forall t, 
+    tm_of empty_sign [arr a a] (abs a (app (fvar 0) (bvar 0))) t ->
+    t = arr a a.
+Proof.
+  intros t OF.
+  inversion OF; subst; cbn in *.
+  inversion H5; subst; cbn in *.
+  inversion H3; subst; cbn in *.
+  inversion H2; subst. auto.
+Qed.
+
+(** z:a -> a |- pt: (fun x:a->a => fun y:a => x y) z = (fun y:a => z y) *)
+Example pof_tm_ex1: exists pt, 
+    ptm_of empty_sign [arr a a] pt 
+           (app (abs (arr a a) (abs a (app (bvar 1) (bvar 0)))) (fvar 0) == 
+            abs a (app (fvar 0) (bvar 0))).
+Proof.
+  eexists.
+  eapply ptm_of_beta. reflexivity.
+  - econstructor. reflexivity.
+    cbn. econstructor. reflexivity.
+    cbn. econstructor. constructor. cbn. reflexivity.
+    econstructor. reflexivity.
+  - constructor. reflexivity.
+  - cbn. reflexivity.
+Qed.
+
+Example pof_tm_ex2: forall pt, 
+    pt = beta (arr a a) (abs a (app (bvar 1) (bvar 0))) (fvar 0) ->
+    ptm_of empty_sign [arr a a] pt 
+           (app (abs (arr a a) (abs a (app (bvar 1) (bvar 0)))) (fvar 0) == 
+            abs a (app (fvar 0) (bvar 0))).
+Proof.
+  intros. subst.
+  eapply ptm_of_beta. reflexivity.
+  econstructor. reflexivity.
+  cbn. econstructor. reflexivity.
+  cbn. econstructor. econstructor. reflexivity.
+  econstructor. reflexivity.
+  econstructor. reflexivity.
+  cbn. reflexivity.
+Qed.
 
