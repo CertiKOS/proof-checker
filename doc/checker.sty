@@ -10,6 +10,8 @@
 \def\imply{\supset}
 \def\sep{\; | \;}
 
+\def\longeq{\qquad = \qquad}
+
 
 \def\STLC{STLC\xspace}
 \def\STLCE{STLC-e\xspace}
@@ -17,6 +19,9 @@
 \def\STLCD{STLC-d\xspace}
 \def\Up{\Upsilon}
 
+% Symbols
+\def\si{\sigma}
+\def\Si{\Sigma}
 
 % Terms
 \def\prop{\mathbb{P}}
@@ -48,6 +53,7 @@
 
 % Typing judgments and rules
 \newcommand{\typeof}[4]{#2 \vdash_{#1} #3: #4}
+\newcommand{\tyof}[3]{#1 \vdash #2: #3}
 \newcommand{\ctypeof}[5]{#2; #3 \vdash_{#1} #4: #5}
 \newcommand{\cmtypeof}[4]{#2 \vdash_{#1} #3: #4}
 
@@ -90,3 +96,6 @@
 \newcommand{\binding}[3]{\lfloor#1\rfloor^{#2}_{#3}}
 \newcommand{\fresheningz}[2]{\lceil#1\rceil_{#2}}
 \newcommand{\bindingz}[2]{\lfloor#1\rfloor_{#2}}
+\newcommand{\len}[1]{|#1|}
+\newcommand{\subst}[2]{{#1}\cdot{#2}}
+\newcommand{\idsubst}[1]{\mbox{\bf id}_{#1}}

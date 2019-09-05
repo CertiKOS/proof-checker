@@ -202,7 +202,7 @@ proof rules for typing proof terms are self-explanatory.
 }
 \\
 \infer[\mbox{\typbeta}]{
-  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau_1}{t_1}{t_2}}{(\tabs{x}{\tau_1}{t_1})\app t_2 = t_2[t_1/x]}
+  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau_1}{t_1}{t_2}}{(\tabs{x}{\tau_1}{t_1})\app t_2 = t_1[t_2/x]}
 }{
   \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t_1}}{\tau_1 \to \tau_2}
   &
@@ -239,12 +239,15 @@ The syntax of \STLCD is as follows:
 \>$\pi$   \>$:=$  \>$c_\pi \sep \refl{t} \sep \trans{\pi_1}{\pi_2} \sep \symm{\pi}$\\
 \>\>\>$\sep \dcongtabs{\tau}{\pi} \sep \congappl{\pi} \sep \congappr{\pi} 
        \sep \congeql{\pi} \sep \congeqr{\pi}$\\
-\>\>\>$\sep \dtbetaconv{\tau}{t_1}{t_2} \sep \conv{\pi_1}{\pi_2}$
+\>\>\>$\sep \dtbetaconv{\tau}{t_1}{t_2} \sep \conv{\pi_1}{\pi_2}$\\
+\>$\Phi$  \>$:=$ \>$\bullet \sep \Phi, \tau$\\
+\>$\sigma$  \>$:=$ \>$\bullet \sep \sigma, t$
 \end{tabbing}
 %
 where $f_i$ represents the $i$-th free variable in the enclosing
 context and $b_i$ represents the de-bruijn index $i$ of a bound
-variable.
+variable; $\Phi$ represents a typing context as a list of types and
+$\si$ represents a simultaneous substitution as a list of terms.
 \end{mydef}
 
 \begin{mydef}[Variable Limits]\label{def:stlcd-var-limits}
@@ -411,6 +414,101 @@ $\bindingz{t}{m}$ ($\bindingz{\pi}{m}$) to denote $\binding{t}{0}{m}$
 \end{mydef}
 
 
+
+\begin{mydef}[Substitution length]\label{def:stlcd-subst-len}
+The length of a substitution $\si$ is defined as follows:
+\begin{align*}
+\len{\bullet} & \longeq 0\\
+\len{\si,t} & \longeq \len{\si}+1
+\end{align*}
+\end{mydef}
+
+\begin{mydef}[Substitution access]\label{def:stlcd-subst-access}
+The operation of accessing the i-th element of a substitution is
+defined as follows:
+\begin{align*}
+(\si,t).\len{\si} & \longeq t  \\
+(\si,t).i  & \longeq \ \si.i \qquad  (i < \len{\si})
+\end{align*}
+\end{mydef}
+
+\begin{mydef}[Substitution application]\label{def:stlcd-subst-app}
+The operation of applying a substitution is defined as follows:
+\\
+
+\fbox{$\subst{t}{\si}$}
+\begin{align*}
+  \subst{c}{\si}      & \longeq c\\
+  \subst{v_i}{\si}    & \longeq \si.i\\
+  \subst{b_i}{\si}    & \longeq b_i\\
+  \subst{(\dtabs{\tau}{t})}{\si}    & \longeq  
+    \dtabs{\tau}{(\subst{t}{\si})}\\
+  \subst{t_1\app t_2}{\si}   & \longeq
+    (\subst{t_1}{\si})\app (\subst{t_2}{\si})\\
+  \subst{t_1 = t_2}{\si}   & \longeq
+    \subst{t_1}{\si} = \subst{t_2}{\si}
+\end{align*}
+
+\fbox{$\subst{\pi}{\si}$}
+\begin{align*}
+  \subst{c_\pi}{\si}      & \longeq c_\pi\\
+  \subst{(\refl{t})}{\si}       & \longeq 
+    \refl{(\subst{t}{\si})}\\
+  \subst{(\trans{\pi_1}{\pi_2})}{\si}   & \longeq
+    \trans{(\subst{\pi_1}{\si})}{(\subst{\pi_2}{\si})}\\
+  \subst{(\symm{\pi})}{\si}  & \longeq
+    \symm{(\subst{\pi}{\si})}\\
+  \subst{(\dcongtabs{\tau}{\pi})}{\si}   & \longeq
+    \dcongtabs{\tau}{(\subst{\pi}{\si})}\\
+  \subst{(\congappl{\pi})}{\si}  & \longeq
+    \congappl{(\subst{\pi}{\si})}\\
+  \subst{(\congappr{\pi})}{\si}  & \longeq
+    \congappr{(\subst{\pi}{\si})}\\
+  \subst{(\congeql{\pi})}{\si}  & \longeq
+    \congeql{(\subst{\pi}{\si})}\\
+  \subst{(\congeqr{\pi})}{\si}  & \longeq
+    \congeqr{(\subst{\pi}{\si})}\\
+  \subst{(\dtbetaconv{\tau}{t_1}{t_2})}{\si}  & \longeq
+    \dtbetaconv{\tau}{(\subst{t_1}{\si})}{(\subst{t_2}{\si})}\\
+  \subst{(\conv{\pi_1}{\pi_2})}{\si}  & \longeq
+    \conv{(\subst{\pi_1}{\si})}{(\subst{\pi_2}{\si})}
+\end{align*}
+
+\fbox{$\subst{\si}{\si'}$}
+\begin{align*}
+  \subst{\bullet}{\si'} & \longeq \bullet\\
+  \subst{(\si,t)}{\si'} & \longeq (\subst{\si}{\si'}), (\subst{t}{\si'})
+\end{align*}
+\end{mydef}
+
+
+\begin{mydef}[Context length]\label{def:stlcd-ctx-len}
+The length of a context $\Phi$ is defined as follows:
+\begin{align*}
+\len{\bullet} & \longeq 0\\
+\len{\Phi,\tau} & \longeq \len{\Phi}+1
+\end{align*}
+\end{mydef}
+
+\begin{mydef}[Context access]\label{def:stlcd-ctx-access}
+The operation of accessing the i-th element of a context is
+defined as follows:
+\begin{align*}
+(\Phi,\tau).\len{\Phi} & \longeq \tau  \\
+(\Phi,\tau).i  & \longeq \ \Phi.i \qquad  (i < \len{\Phi})
+\end{align*}
+\end{mydef}
+
+
+\begin{mydef}[Identity substitution]\label{def:stlcd-id-subst}
+The identity substitution $\idsubst{\Phi}$ for a context $\Phi$ is
+defined as follows:
+\begin{align*}
+  \idsubst{\bullet}    & \longeq \bullet\\
+  \idsubst{\Phi,\tau}  & \longeq \idsubst{\Phi},f_{\len{\Phi}}
+\end{align*}
+\end{mydef}
+
 \begin{mydef}[Typing]\label{def:stlcd-typing-rules}
   The typing rules are shown in Figure~\ref{fig:stlcd-typing-rules}.
 \end{mydef}
@@ -420,115 +518,115 @@ $\bindingz{t}{m}$ ($\bindingz{\pi}{m}$) to denote $\binding{t}{0}{m}$
 \fbox{$\typeof{\Sigma}{\Phi}{t}{\tau}$}
 \begin{gather*}  
 \infer[\mbox{\typconst}]{
-  \typeof{\Sigma}{\Phi}{c}{\tau}
+  \typeof{\Si}{\Phi}{c}{\tau}
 }{
-  c:\tau \in \Sigma
+  c:\tau \in \Si
 }
 \qquad
 \infer[\mbox{\typvar}]{
-  \typeof{\Sigma}{\Phi}{x}{\tau}
+  \tyof{\Phi}{f_i}{\tau}
 }{
-  x:\tau \in \Phi
+  \Phi.i = \tau
 }
 \\
 \infer[\mbox{\typabs}]{
-  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t}}{\tau_1 \to \tau_2}
+  \tyof{\Phi}{\dtabs{\tau_1}{t}}{\tau_1 \to \tau_2}
 }{
-  x:\_ \not\in\Phi 
-  &
-  \typeof{\Sigma}{\Phi,x:\tau_1}{t}{\tau_2}
+  \tyof{\Phi,\tau_1}{\fresheningz{t}{\len{\Phi}}}{\tau_2}
 }
 \qquad
 \infer[\mbox{\typapp}]{
-  \typeof{\Sigma}{\Phi}{t_1\app t_2}{\tau_2}
+  \tyof{\Phi}{t_1\app t_2}{\tau_2}
 }{
-  \typeof{\Sigma}{\Phi}{t_1}{\tau_1 \to \tau_2}
+  \tyof{\Phi}{t_1}{\tau_1 \to \tau_2}
   &
-  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+  \tyof{\Phi}{t_2}{\tau_1}
 }
 \\
 \infer[\mbox{\typteq}]{
-  \typeof{\Sigma}{\Phi}{t_1 = t_2}{\prop}
+  \tyof{\Phi}{t_1 = t_2}{\prop}
 }{
-  \typeof{\Sigma}{\Phi}{t_1}{\tau}
+  \tyof{\Phi}{t_1}{\tau}
   &
-  \typeof{\Sigma}{\Phi}{t_2}{\tau}
+  \tyof{\Phi}{t_2}{\tau}
 }
 \end{gather*}
 \\
-\fbox{$\typeof{\Sigma}{\Phi}{\pi}{t}$}
+\fbox{$\typeof{\Si}{\Phi}{\pi}{t}$}
 \\
 \begin{gather*}
 \infer[\mbox{\typpconst}]{
-  \typeof{\Sigma}{\Phi}{c_\pi}{t}
+  \typeof{\Si}{\Phi}{c_\pi}{t}
 }{
   c_\pi:t \in \Sigma
 }
 \qquad
 \infer[\mbox{\typrefl}]{
-  \typeof{\Sigma}{\Phi}{\refl t}{t = t}
+  \tyof{\Phi}{\refl t}{t = t}
 }{
-  \typeof{\Sigma}{\Phi}{t}{\tau}
+  \tyof{\Phi}{t}{\tau}
 }
 \qquad
 \infer[\mbox{\typtrans}]{
-  \typeof{\Sigma}{\Phi}{\trans{\pi_1}{\pi_2}}{t_1 = t_3}
+  \tyof{\Phi}{\trans{\pi_1}{\pi_2}}{t_1 = t_3}
 }{
-  \typeof{\Sigma}{\Phi}{\pi_1}{t_1 = t_2}
+  \tyof{\Phi}{\pi_1}{t_1 = t_2}
   &
-  \typeof{\Sigma}{\Phi}{\pi_2}{t_2 = t_3}
+  \tyof{\Phi}{\pi_2}{t_2 = t_3}
 }
 \\
 \infer[\mbox{\typsymm}]{
-  \typeof{\Sigma}{\Phi}{\symm{\pi}}{t_1 = t_2}
+  \tyof{\Phi}{\symm{\pi}}{t_1 = t_2}
 }{
-  \typeof{\Sigma}{\Phi}{\pi}{t_2 = t_1}
+  \tyof{\Phi}{\pi}{t_2 = t_1}
 }
 \qquad
 \infer[\mbox{\typcongabs}]{
-  \typeof{\Sigma}{\Phi}{\congtabs{x}{\tau}{\pi}}{\tabs{x}{\tau}{t_1} = \tabs{x}{\tau}{t_2}}
+  \tyof{\Phi}{\dcongtabs{\tau}{\pi}}{\dtabs{\tau}
+    {\bindingz{t_1}{\len{\Phi}}} = \dtabs{\tau}{\bindingz{t_2}{\len{\Phi}}}}
 }{
-  \typeof{\Sigma}{\Phi,x:\tau}{\pi}{t_1 = t_2}
+  \tyof{\Phi,\tau}{\fresheningz{\pi}{\len{\Phi}}}{t_1 = t_2}
 }
 \\
 \infer[\mbox{\typcongappl}]{
-  \typeof{\Sigma}{\Phi}{\congappl{\pi}}{t_1\app t_2 = t_1'\app t_2}
+  \tyof{\Phi}{\congappl{\pi}}{t_1\app t_2 = t_1'\app t_2}
 }{
-  \typeof{\Sigma}{\Phi}{\pi_1}{t_1 = t_1'}
+  \tyof{\Phi}{\pi_1}{t_1 = t_1'}
 }
 \qquad
 \infer[\mbox{\typcongappr}]{
-  \typeof{\Sigma}{\Phi}{\congappr{\pi}}{t_1\app t_2 = t_1\app t_2'}
+  \tyof{\Phi}{\congappr{\pi}}{t_1\app t_2 = t_1\app t_2'}
 }{
-  \typeof{\Sigma}{\Phi}{\pi_1}{t_2 = t_2'}
+  \tyof{\Phi}{\pi_1}{t_2 = t_2'}
 }
 \\
 \infer[\mbox{\typcongeql}]{
-  \typeof{\Sigma}{\Phi}{\congeql{\pi}}{(t_1 = t_2) = (t_1' = t_2)}
+  \tyof{\Phi}{\congeql{\pi}}{(t_1 = t_2) = (t_1' = t_2)}
 }{
-  \typeof{\Sigma}{\Phi}{\pi}{t_1 = t_1'}
+  \tyof{\Phi}{\pi}{t_1 = t_1'}
 }
 \qquad
 \infer[\mbox{\typcongeqr}]{
-  \typeof{\Sigma}{\Phi}{\congeqr{\pi}}{(t_1 = t_2') = (t_1 = t_2)}
+  \tyof{\Phi}{\congeqr{\pi}}{(t_1 = t_2') = (t_1 = t_2)}
 }{
-  \typeof{\Sigma}{\Phi}{\pi}{t_2 = t_2'}
+  \tyof{\Phi}{\pi}{t_2 = t_2'}
 }
 \\
 \infer[\mbox{\typbeta}]{
-  \typeof{\Sigma}{\Phi}{\tbetaconv{x}{\tau_1}{t_1}{t_2}}{(\tabs{x}{\tau_1}{t_1})\app t_2 = t_2[t_1/x]}
+  \tyof{\Phi}{\dtbetaconv{\tau_1}{t_1}{t_2}}
+       {(\dtabs{\tau_1}{t_1})\app t_2 = \subst{\fresheningz{t_1}{\len{\Phi}}}{(\idsubst{\Phi},t_2)}}
 }{
-  \typeof{\Sigma}{\Phi}{\tabs{x}{\tau_1}{t_1}}{\tau_1 \to \tau_2}
+  \tyof{\Phi}{\dtabs{\tau_1}{t_1}}{\tau_1 \to \tau_2}
   &
-  \typeof{\Sigma}{\Phi}{t_2}{\tau_1}
+  \tyof{\Phi}{t_2}{\tau_1}
 }
 \\
 \infer[\mbox{\typconv}]{
-  \typeof{\Sigma}{\Phi}{\conv{\pi_1}{\pi_2}}{t_2}
+  \tyof{\Phi}{\conv{\pi_1}{\pi_2}}{t_2}
 }{
-  \typeof{\Sigma}{\Phi}{\pi_1}{t_1}
+  \tyof{\Phi}{\pi_1}{t_1}
   &
-  \typeof{\Sigma}{\Phi}{\pi_2}{t_1 = t_2}
+  \tyof{\Phi}{\pi_2}{t_1 = t_2}
 }
 \end{gather*}  
   
