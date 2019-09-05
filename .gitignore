@@ -10,3 +10,7 @@
 *.blg
 *.lp
 *.lpo
+.depend
+*.glob
+*.v.d
+*.vo
