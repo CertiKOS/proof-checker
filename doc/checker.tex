@@ -331,9 +331,9 @@ $\fresheningz{t}{m}$ ($\fresheningz{\pi}{m}$) to denote $\freshening{t}{0}{m}$
   \freshening{\dtabs{\tau}{t}}{n}{m} & \qquad = \qquad 
     \dtabs{\tau}{\freshening{t}{n+1}{m}}\\
   \freshening{t_1\app t_2}{n}{m} & \qquad = \qquad
-    \freshening{t_1}{n}{m} \land \freshening{t_1}{n}{m}\\
+    \freshening{t_1}{n}{m}\app  \freshening{t_1}{n}{m}\\
   \freshening{t_1 = t_2}{n}{m} & \qquad = \qquad
-    \freshening{t_1}{n}{m} \land \freshening{t_1}{n}{m}
+    \freshening{t_1}{n}{m} = \freshening{t_1}{n}{m}
 \end{align*}
 
 
