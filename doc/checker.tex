@@ -629,6 +629,23 @@ defined as follows:
   \tyof{\Phi}{\pi_2}{t_1 = t_2}
 }
 \end{gather*}  
+
+\fbox{$\tyof{\Phi}{\si}{\Phi'}$}
+\\
+\begin{gather*}
+  \infer[]{
+    \tyof{\Phi}{\bullet}{\bullet}
+  }{}
+  \qquad
+  \infer[]{
+    \tyof{\Phi}{(\si,t)}{(\Phi',\tau)}
+  }{
+    \tyof{\Phi}{\si}{\Phi'}
+    &
+    \tyof{\Phi}{t}{\tau}
+  }
+\end{gather*}
+
   
 \caption{The typing rules of \STLCD}
 \label{fig:stlcd-typing-rules}
