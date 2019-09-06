@@ -447,29 +447,45 @@ Qed.
 
 
 Lemma app_sub_tm_cst: forall c s t, app_sub_tm (cst c) s = Some t -> t = (cst c).
-Admitted.
+Proof.
+  simpl. intros. congruence.
+Qed.
 
 Lemma app_sub_tm_bvar: forall i s t, app_sub_tm (bvar i) s = Some t -> t = (bvar i).
-Admitted.
+Proof.
+  simpl. intros. congruence.
+Qed.
 
 Lemma app_sub_tm_abs: forall ty t s t', 
     app_sub_tm (abs ty t) s = Some t' -> 
     exists t1, app_sub_tm t s = Some t1 /\ t' = abs ty t1.
-Admitted.
+Proof.
+  simpl. intros.
+  opt_monad_inv H.
+  eauto.
+Qed.
 
 Lemma app_sub_tm_app: forall t1 t2 s t',
     app_sub_tm (app t1 t2) s = Some t' -> 
     exists t1' t2', app_sub_tm t1 s = Some t1' /\ 
                app_sub_tm t2 s = Some t2' /\
                t' = app t1' t2'.
-Admitted.
+Proof.
+  simpl. intros.
+  opt_monad_inv H.
+  eauto.
+Qed.
 
 Lemma app_sub_tm_teq: forall t1 t2 s t',
     app_sub_tm (t1 == t2) s = Some t' -> 
     exists t1' t2', app_sub_tm t1 s = Some t1' /\ 
                app_sub_tm t2 s = Some t2' /\
                t' = (t1' == t2').
-Admitted.
+Proof.
+  simpl; intros.
+  opt_monad_inv H.
+  eauto.
+Qed.
 
 
 (** Decidability of index_sub *)
@@ -541,38 +557,28 @@ Next Obligation.
   rewrite H0. simpl. auto.
 Defined.
 Next Obligation.
-  intro EQ. 
-  destruct (app_sub_tm t1 s) eqn:EQ1; simpl in *; congruence.
+    intro EQ; opt_monad_inv EQ; simpl in *; congruence.
 Defined.
 Next Obligation.
-  intro EQ.
-  destruct (app_sub_tm t1 s) eqn:EQ1; simpl in *; congruence.
-Defined.
-Next Obligation.
-  rewrite H, H0. simpl. congruence.
-Defined.
-Next Obligation.
-  intro EQ.
-  destruct (app_sub_tm t1 s) eqn:EQ1; 
-    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
-Defined.
-Next Obligation.
-  intro EQ.
-  destruct (app_sub_tm t1 s) eqn:EQ1; 
-    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
 Defined.
 Next Obligation.
   rewrite H, H0. simpl. congruence.
 Defined.
 Next Obligation.
-  intro EQ.
-  destruct (app_sub_tm t1 s) eqn:EQ1; 
-    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
 Defined.
 Next Obligation.
-  intro EQ.
-  destruct (app_sub_tm t1 s) eqn:EQ1; 
-    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
+Defined.
+Next Obligation.
+  rewrite H, H0. simpl. congruence.
+Defined.
+Next Obligation.
+  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
+Defined.
+Next Obligation.
+  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
 Defined.
 Next Obligation.
   intro EQ.
