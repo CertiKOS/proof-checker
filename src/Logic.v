@@ -186,7 +186,7 @@ Definition idsub (n:nat) : sub :=
 (* End ALT_SUB_INDEX. *)
 
 Definition index_sub (s:sub) (i:nat) : option term :=
-  if Nat.leb i (length s -1) then 
+  if le_dec i (length s -1) then 
     nth_error s (length s - 1 - i)
   else
     None.
@@ -389,3 +389,209 @@ Proof.
   cbn. reflexivity.
 Qed.
 
+
+(** ** Decidability of substitution applications *)
+Definition ty_dec (ty1 ty2: ty) : {ty1 = ty2} + {ty1 <> ty2}. 
+  decide equality.
+Qed.
+
+Definition tm_dec (t1 t2: term) : {t1 = t2} + {t1 <> t2}. 
+  decide equality; decide equality.
+Qed.
+
+(* Program Fixpoint ty_dec ty1 ty2 : {ty1 = ty2} + {ty1 <> ty2} := *)
+(*   match ty1, ty2 with *)
+(*   | prop, prop => left _ *)
+(*   | bty, bty => left _ *)
+(*   | arr ty1' ty1'', arr ty2' ty2'' => *)
+(*     if ty_dec ty1' ty2' then *)
+(*       if ty_dec ty1'' ty2'' then left _ else right _ *)
+(*     else *)
+(*       right _ *)
+(*   | _, _ => right _ *)
+(*   end. *)
+(* Next Obligation. *)
+(*   destruct ty1, ty2; try tauto; try (intro EQ; congruence). *)
+(*   intro EQ. eapply H0; eauto. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   split. intros [H1 H2]. congruence. *)
+(*   split. intros ty1' ty1'' ty2' ty2'' [H1 H2]. congruence. *)
+(*   intros [H1 H2]. congruence. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   split. intros [H1 H2]. congruence. *)
+(*   split. intros ty1' ty1'' ty2' ty2'' [H1 H2]. congruence. *)
+(*   intros [H1 H2]. congruence. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   split. intros [H1 H2]. congruence. *)
+(*   split. intros ty1' ty1'' ty2' ty2'' [H1 H2]. congruence. *)
+(*   intros [H1 H2]. congruence. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   split. intros [H1 H2]. congruence. *)
+(*   split. intros ty1' ty1'' ty2' ty2'' [H1 H2]. congruence. *)
+(*   intros [H1 H2]. congruence. *)
+(* Defined.   *)
+(* Next Obligation. *)
+(*   split. intros [H1 H2]. congruence. *)
+(*   split. intros ty1' ty1'' ty2' ty2'' [H1 H2]. congruence. *)
+(*   intros [H1 H2]. congruence. *)
+(* Defined.   *)
+(* Next Obligation. *)
+(*   split. intros [H1 H2]. congruence. *)
+(*   split. intros ty1' ty1'' ty2' ty2'' [H1 H2]. congruence. *)
+(*   intros [H1 H2]. congruence. *)
+(* Defined.   *)
+
+
+Lemma app_sub_tm_cst: forall c s t, app_sub_tm (cst c) s = Some t -> t = (cst c).
+Admitted.
+
+Lemma app_sub_tm_bvar: forall i s t, app_sub_tm (bvar i) s = Some t -> t = (bvar i).
+Admitted.
+
+Lemma app_sub_tm_abs: forall ty t s t', 
+    app_sub_tm (abs ty t) s = Some t' -> 
+    exists t1, app_sub_tm t s = Some t1 /\ t' = abs ty t1.
+Admitted.
+
+Lemma app_sub_tm_app: forall t1 t2 s t',
+    app_sub_tm (app t1 t2) s = Some t' -> 
+    exists t1' t2', app_sub_tm t1 s = Some t1' /\ 
+               app_sub_tm t2 s = Some t2' /\
+               t' = app t1' t2'.
+Admitted.
+
+Lemma app_sub_tm_teq: forall t1 t2 s t',
+    app_sub_tm (t1 == t2) s = Some t' -> 
+    exists t1' t2', app_sub_tm t1 s = Some t1' /\ 
+               app_sub_tm t2 s = Some t2' /\
+               t' = (t1' == t2').
+Admitted.
+
+
+(** Decidability of index_sub *)
+Program Definition index_sub_dec t s i: 
+  {index_sub s i = Some t} + {index_sub s i <> Some t} :=
+  if le_dec i (length s - 1) then
+    match nth_error s (length s - 1 - i) with
+    | None => right _
+    | Some t' => 
+      if tm_dec t t' then left _ else right _
+    end
+  else
+    right _.
+Next Obligation.
+  unfold index_sub. 
+  destruct (le_dec i (length s - 1)); congruence.
+Defined.
+Next Obligation.
+  unfold index_sub.
+  destruct (le_dec i (length s - 1)); congruence.
+Defined.
+Next Obligation.
+  unfold index_sub.
+  destruct (le_dec i (length s - 1)); congruence.
+Defined.
+Next Obligation.
+  unfold index_sub.
+  destruct (le_dec i (length s - 1)); congruence.
+Defined.
+
+Ltac solve_cong := 
+  lazymatch goal with
+  | [ |- forall _, _ ] =>
+    intro; solve_cong
+  | [ |- ~ (_ /\ _) ] =>
+    let H1 := fresh "H" in
+    let H2 := fresh "H" in
+    intros; intros (H1 & H2); congruence
+  end.
+
+  
+Program Fixpoint app_sub_tm_dec t s t' 
+  : {app_sub_tm t s = Some t'} + {app_sub_tm t s <> Some t'} :=
+  match t, t' with 
+  | cst i, cst i' => 
+    if Pos.eq_dec i i' then left _ else right _
+  | fvar i, _ =>
+    if index_sub_dec t' s i then left _ else right _
+  | bvar i, bvar i' =>
+    if Nat.eq_dec i i' then left _ else right _
+  | abs ty t1, abs ty' t1' =>
+    if ty_dec ty ty' then
+      if app_sub_tm_dec t1 s t1' then left _ else right _
+    else 
+      right _
+  | app t1 t2, app t1' t2' =>
+    if app_sub_tm_dec t1 s t1' then 
+      if app_sub_tm_dec t2 s t2' then left _ else right _
+    else 
+      right _
+  | t1 == t2, t1' == t2' =>
+    if app_sub_tm_dec t1 s t1' then 
+      if app_sub_tm_dec t2 s t2' then left _ else right _
+    else 
+      right _
+  | _, _ => right _
+  end.
+Next Obligation.
+  rewrite H0. simpl. auto.
+Defined.
+Next Obligation.
+  intro EQ. 
+  destruct (app_sub_tm t1 s) eqn:EQ1; simpl in *; congruence.
+Defined.
+Next Obligation.
+  intro EQ.
+  destruct (app_sub_tm t1 s) eqn:EQ1; simpl in *; congruence.
+Defined.
+Next Obligation.
+  rewrite H, H0. simpl. congruence.
+Defined.
+Next Obligation.
+  intro EQ.
+  destruct (app_sub_tm t1 s) eqn:EQ1; 
+    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+Defined.
+Next Obligation.
+  intro EQ.
+  destruct (app_sub_tm t1 s) eqn:EQ1; 
+    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+Defined.
+Next Obligation.
+  rewrite H, H0. simpl. congruence.
+Defined.
+Next Obligation.
+  intro EQ.
+  destruct (app_sub_tm t1 s) eqn:EQ1; 
+    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+Defined.
+Next Obligation.
+  intro EQ.
+  destruct (app_sub_tm t1 s) eqn:EQ1; 
+    destruct (app_sub_tm t2 s) eqn:EQ2; simpl in *; congruence.
+Defined.
+Next Obligation.
+  intro EQ.
+  destruct t.
+  - apply app_sub_tm_cst in EQ; subst. eapply H4; eauto.
+  - eapply H; eauto.
+  - apply app_sub_tm_bvar in EQ; subst. eapply H0; eauto.
+  - apply app_sub_tm_abs in EQ. destruct EQ as [t1 [EQ1 EQ2]]. subst.
+    eapply H1; eauto.
+  - apply app_sub_tm_app in EQ.
+    destruct EQ as (t1' & t2' & EQ1 & EQ2 & EQ3). subst.
+    eapply H2; eauto.
+  - apply app_sub_tm_teq in EQ.
+    destruct EQ as (t1' & t2' & EQ1 & EQ2 & EQ3). subst.
+    eapply H3; eauto.
+Defined.
+Solve All Obligations with repeat split; solve_cong.
+
+
+
+
+  
