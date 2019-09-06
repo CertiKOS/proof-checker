@@ -598,6 +598,25 @@ Defined.
 Solve All Obligations with repeat split; solve_cong.
 
 
+(** ** Decidability of typing terms *)
 
+Remark sign_dec: forall (sgn:sign) c ty, 
+    {sgn c = Some ty} + {sgn c <> Some ty}.
+Proof.
+  decide equality.
+  apply ty_dec.
+Qed.
 
-  
+Program Definition tm_of_dec S C t ty :
+  {tm_of S C t ty} + {~tm_of S C t ty} :=
+  match t with
+  | cst c => 
+    if sign_dec S c ty then left _ else right _
+  | _ => right _
+  end.
+Next Obligation.
+  constructor. auto.
+Defined.
+Next Obligation.
+  intro OF. apply H. inversion OF; auto.
+Defined.
