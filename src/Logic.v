@@ -516,7 +516,7 @@ Next Obligation.
   destruct (le_dec i (length s - 1)); congruence.
 Defined.
 
-Ltac solve_cong := 
+Local Ltac solve_cong := 
   lazymatch goal with
   | [ |- forall _, _ ] =>
     intro; solve_cong
@@ -526,6 +526,18 @@ Ltac solve_cong :=
     intros; intros (H1 & H2); congruence
   end.
 
+Local Ltac solve_neq :=
+  match goal with
+  | [ |- _ <> _ ] =>
+    let EQ := fresh "EQ" in
+    intro EQ; opt_monad_inv EQ; simpl in *; congruence
+  end.
+
+Show Obligation Tactic.
+
+Local Obligation Tactic := 
+  Tactics.program_simpl; 
+  try solve_neq; try (repeat split; solve_cong).
   
 Program Fixpoint app_sub_tm_dec t s t' 
   : {app_sub_tm t s = Some t'} + {app_sub_tm t s <> Some t'} :=
@@ -557,28 +569,10 @@ Next Obligation.
   rewrite H0. simpl. auto.
 Defined.
 Next Obligation.
-    intro EQ; opt_monad_inv EQ; simpl in *; congruence.
-Defined.
-Next Obligation.
-  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
-Defined.
-Next Obligation.
   rewrite H, H0. simpl. congruence.
 Defined.
 Next Obligation.
-  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
-Defined.
-Next Obligation.
-  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
-Defined.
-Next Obligation.
   rewrite H, H0. simpl. congruence.
-Defined.
-Next Obligation.
-  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
-Defined.
-Next Obligation.
-  intro EQ; opt_monad_inv EQ; simpl in *; congruence.
 Defined.
 Next Obligation.
   intro EQ.
@@ -595,28 +589,44 @@ Next Obligation.
     destruct EQ as (t1' & t2' & EQ1 & EQ2 & EQ3). subst.
     eapply H3; eauto.
 Defined.
-Solve All Obligations with repeat split; solve_cong.
+
 
 
 (** ** Decidability of typing terms *)
 
-Remark sign_dec: forall (sgn:sign) c ty, 
+Definition sign_dec: forall (sgn:sign) c ty, 
     {sgn c = Some ty} + {sgn c <> Some ty}.
 Proof.
   decide equality.
   apply ty_dec.
-Qed.
+Defined.
 
-Program Definition tm_of_dec S C t ty :
-  {tm_of S C t ty} + {~tm_of S C t ty} :=
-  match t with
-  | cst c => 
-    if sign_dec S c ty then left _ else right _
-  | _ => right _
-  end.
-Next Obligation.
-  constructor. auto.
+Definition index_ctx_dec C i ty
+  : {index_ctx C i = Some ty} + {index_ctx C i <> Some ty}.
+Proof.
+  decide equality.
+  apply ty_dec.
 Defined.
-Next Obligation.
-  intro OF. apply H. inversion OF; auto.
-Defined.
+
+(* Program Fixpoint tm_of_dec S C t ty : *)
+(*   {tm_of S C t ty} + {~tm_of S C t ty} := *)
+(*   match t with *)
+(*   | cst c =>  *)
+(*     if sign_dec S c ty then left _ else right _ *)
+(*   | fvar i => *)
+(*     if index_ctx_dec C i ty then left _ else right _ *)
+(*   | _ => right _ *)
+(*   end. *)
+(* Next Obligation. *)
+(*   constructor. auto. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   intro OF. apply H. inversion OF; auto. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   constructor. auto. *)
+(* Defined. *)
+(* Next Obligation. *)
+(*   intro OF. apply H. inversion OF; subst. auto. *)
+(* Defined. *)
+
